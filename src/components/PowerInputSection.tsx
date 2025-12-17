@@ -2,6 +2,7 @@ import { Input } from './Input'
 import { CIRCUIT_TYPE_LABELS, CIRCUIT_SUGGESTIONS, PHASE_TYPE_LABELS } from '../types/circuit'
 import type { CircuitType, PhaseType, InputMode } from '../types/circuit'
 import { calculateCurrentSinglePhase, calculateCurrentThreePhase } from '../logic/calculations'
+import { POWER_FACTOR_PRESETS, POWER_FACTOR_LABELS } from '../constants/electricalData'
 
 interface PowerInputSectionProps {
   name: string
@@ -145,23 +146,61 @@ export const PowerInputSection = ({
                 unit="kW"
                 placeholder="Wprowadź moc"
               />
+
+              {/* Dropdown z presetami cosφ */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Współczynnik mocy (cosφ) - preset
+                </label>
+                <select
+                  onChange={(e) => {
+                    const preset = e.target.value as keyof typeof POWER_FACTOR_PRESETS
+                    if (preset && preset !== 'custom') {
+                      onPowerFactorChange(POWER_FACTOR_PRESETS[preset].toString())
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  <option value="custom">Własna wartość...</option>
+                  {Object.entries(POWER_FACTOR_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Input manualny dla cosφ */}
               <Input
-                label="Współczynnik mocy (cosφ)"
+                label="Współczynnik mocy (cosφ) - wartość"
                 value={powerFactor}
                 onChange={onPowerFactorChange}
                 type="number"
                 unit=""
                 placeholder={phaseType === 'single' ? '1.0' : '0.93'}
               />
+
+              {/* Walidacja cosφ */}
+              {powerFactor && (parseFloat(powerFactor) <= 0 || parseFloat(powerFactor) > 1.0) && (
+                <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded">
+                  <p className="text-sm font-medium text-red-800">
+                    ⚠️ Nieprawidłowa wartość cosφ!
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Współczynnik mocy musi być w zakresie (0, 1]
+                  </p>
+                </div>
+              )}
+
               {calculatedIB > 0 && (
                 <div className="p-3 bg-green-50 border-l-4 border-green-500 rounded">
                   <p className="text-sm font-medium text-green-800">
-                    💡 Obliczony prąd IB = <strong>{calculatedIB.toFixed(2)} A</strong>
+                    💡 Obliczony prąd I<sub>B</sub> = <strong>{calculatedIB.toFixed(2)} A</strong>
                   </p>
                   <p className="text-xs text-green-600 mt-1">
                     {phaseType === 'single'
-                      ? `IB = ${powerKW} × 1000 / 230 / ${powerFactor || 1}`
-                      : `IB = ${powerKW} × 1000 / (√3 × 400 × ${powerFactor || 0.93})`
+                      ? `I_B = (${powerKW} × 1000) / (230 × ${powerFactor || 1.0})`
+                      : `I_B = (${powerKW} × 1000) / (√3 × 400 × ${powerFactor || 0.93})`
                     }
                   </p>
                 </div>

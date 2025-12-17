@@ -115,9 +115,9 @@ export const VoltageDropSection = ({
 
           <div className="mt-4 p-3 bg-blue-50 rounded">
             <p className="text-xs text-blue-800">
-              💡 <strong>Wzór:</strong> ΔU% = (2 × IB × ρ × L) / (S × U₀) × 100%
+              💡 <strong>Wzór:</strong> ΔU% = (2 × L × IB × cosφ) / (γ × S × U₀) × 100%
               <br/>
-              gdzie: ρ = 0.0175 Ω·mm²/m (miedź), L = {lengthValue}m, S = {lengthValue > 0 ? 'przekrój przewodu' : '...'}
+              gdzie: γ = przewodność (Cu 70°C: 46 m/(Ω·mm²)), L = {lengthValue}m, S = przekrój przewodu, cosφ = współczynnik mocy
             </p>
           </div>
         </div>

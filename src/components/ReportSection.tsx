@@ -28,24 +28,57 @@ export const ReportSection = ({
       accessor: (row: Circuit) => CIRCUIT_TYPE_LABELS[row.type]
     },
     {
-      header: 'IB [A]',
-      accessor: (row: Circuit) => row.IB.toFixed(1)
+      header: 'IB / Moc',
+      accessor: (row: Circuit) => {
+        return (
+          <div className="text-sm">
+            <div className="font-semibold">{row.IB.toFixed(1)} A</div>
+            {row.powerKW && <div className="text-gray-500 text-xs">{row.powerKW} kW</div>}
+          </div>
+        )
+      }
     },
     {
       header: 'Przewód',
-      accessor: (row: Circuit) => `${row.crossSection} mm² (${row.Iz}A)`
+      accessor: (row: Circuit) => {
+        const materialLabel = row.material === 'copper' ? 'Cu' : 'Al'
+        const methodLabel = row.installationMethod || '?'
+        const cores = row.phaseType === 'three' ? '5x' : '3x'
+
+        return (
+          <div className="text-sm">
+            <div className="font-semibold">{cores}{row.crossSection} mm²</div>
+            <div className="text-gray-500 text-xs">{materialLabel} / {methodLabel}</div>
+          </div>
+        )
+      }
+    },
+    {
+      header: 'Iz [A]',
+      accessor: (row: Circuit) => row.Iz.toFixed(0)
     },
     {
       header: 'Zabezpieczenie',
-      accessor: (row: Circuit) => `${row.characteristic}${row.In}`
+      accessor: (row: Circuit) => {
+        const poles = row.phaseType === 'three' ? '/3P' : ''
+        return `${row.characteristic}${row.In}${poles}`
+      }
     },
     {
-      header: 'Złota zasada',
-      accessor: (row: Circuit) => (
-        <Badge variant={row.goldenRuleValid ? 'success' : 'error'}>
-          {row.goldenRuleValid ? '✓ OK' : '✗ Błąd'}
-        </Badge>
-      )
+      header: 'IB≤In≤Iz',
+      accessor: (row: Circuit) => {
+        const goldenOk = row.goldenRuleValid
+        const overloadOk = row.overloadProtectionValid !== false
+        const allOk = goldenOk && overloadOk
+
+        return (
+          <div className="space-y-1">
+            <Badge variant={allOk ? 'success' : 'error'}>
+              {allOk ? '✓ OK' : '✗ Błąd'}
+            </Badge>
+          </div>
+        )
+      }
     },
     {
       header: 'SWZ',
@@ -53,21 +86,20 @@ export const ReportSection = ({
         if (row.swzValid === undefined) return '-'
         return (
           <Badge variant={row.swzValid ? 'success' : 'error'}>
-            {row.swzValid ? '✓ OK' : '✗ Błąd'}
+            {row.swzValid ? '✓' : '✗'}
           </Badge>
         )
       }
     },
     {
-      header: 'Spadek U',
+      header: 'ΔU [%]',
       accessor: (row: Circuit) => {
         if (!row.voltageDrop) return '-'
         const limit = VOLTAGE_DROP_LIMITS[row.type] * 100
         const isValid = row.voltageDrop <= limit
         return (
           <Badge variant={isValid ? 'success' : 'error'}>
-            {row.voltageDrop.toFixed(2)}%
-            {row.length && ` (${row.length}m)`}
+            {row.voltageDrop.toFixed(1)}%
           </Badge>
         )
       }

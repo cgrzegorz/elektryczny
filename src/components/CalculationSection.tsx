@@ -1,9 +1,9 @@
 import { Badge } from './Badge'
 import { GoldenRuleVisualization } from './GoldenRuleVisualization'
 import { NOMINAL_CURRENTS } from '../constants/electricalData'
-import { CABLE_CAPACITY_A1 } from '../constants/cableTables'
-import { CHARACTERISTIC_LABELS, type ProtectionCharacteristic } from '../types/circuit'
-import { checkGoldenRule } from '../logic/circuitValidation'
+import { CABLE_CAPACITY_A1, type InstallationMethod, INSTALLATION_METHOD_LABELS, getCableCapacityByInstallation, getCableCapacityByInstallationDynamic } from '../constants/cableTables'
+import { CHARACTERISTIC_LABELS, type ProtectionCharacteristic, type CableMaterial, type InsulationType } from '../types/circuit'
+import { checkGoldenRule, checkOverloadProtectionFull } from '../logic/circuitValidation'
 
 interface CalculationSectionProps {
   IB: number
@@ -11,9 +11,19 @@ interface CalculationSectionProps {
   Iz: number
   characteristic: ProtectionCharacteristic
   crossSection: number
+  material: CableMaterial
+  installationMethod: InstallationMethod
+  ambientTemperature: number
+  numberOfCircuitsInBundle: number
+  insulationType: InsulationType
   onInChange: (value: number) => void
   onCharacteristicChange: (value: ProtectionCharacteristic) => void
   onCrossSectionChange: (value: number) => void
+  onMaterialChange: (value: CableMaterial) => void
+  onInstallationMethodChange: (value: InstallationMethod) => void
+  onAmbientTemperatureChange: (value: number) => void
+  onNumberOfCircuitsInBundleChange: (value: number) => void
+  onInsulationTypeChange: (value: InsulationType) => void
 }
 
 export const CalculationSection = ({
@@ -22,15 +32,39 @@ export const CalculationSection = ({
   Iz,
   characteristic,
   crossSection,
+  material,
+  installationMethod,
+  ambientTemperature,
+  numberOfCircuitsInBundle,
+  insulationType,
   onInChange,
   onCharacteristicChange,
-  onCrossSectionChange
+  onCrossSectionChange,
+  onMaterialChange,
+  onInstallationMethodChange,
+  onAmbientTemperatureChange,
+  onNumberOfCircuitsInBundleChange,
+  onInsulationTypeChange
 }: CalculationSectionProps) => {
   const isValid = checkGoldenRule(IB, In, Iz)
+  const overloadCheck = checkOverloadProtectionFull(IB, In, Iz)
 
   // Obliczanie procenta wykorzystania
   const utilizationPercent = Iz > 0 ? (In / Iz) * 100 : 0
   const loadPercent = Iz > 0 ? (IB / Iz) * 100 : 0
+
+  // Automatyczna obciążalność na podstawie sposobu ułożenia (bazowa Idd)
+  const autoIz = getCableCapacityByInstallation(crossSection, installationMethod, material) || 0
+
+  // Dynamiczna obciążalność z uwzględnieniem współczynników poprawkowych
+  const dynamicIz = getCableCapacityByInstallationDynamic(
+    crossSection,
+    installationMethod,
+    material,
+    ambientTemperature,
+    numberOfCircuitsInBundle,
+    insulationType
+  ) || 0
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -77,6 +111,89 @@ export const CalculationSection = ({
           </select>
         </div>
 
+        {/* Wybór materiału */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Materiał żyły
+          </label>
+          <select
+            value={material}
+            onChange={(e) => onMaterialChange(e.target.value as CableMaterial)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="copper">Miedź (Cu)</option>
+            <option value="aluminum">Aluminium (Al)</option>
+          </select>
+        </div>
+
+        {/* Wybór typu izolacji */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Typ izolacji
+          </label>
+          <select
+            value={insulationType}
+            onChange={(e) => onInsulationTypeChange(e.target.value as InsulationType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="PVC">PVC (do 70°C)</option>
+            <option value="XLPE">XLPE/EPR (do 90°C)</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Temperatura otoczenia */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Temperatura otoczenia [°C]
+          </label>
+          <input
+            type="number"
+            value={ambientTemperature}
+            onChange={(e) => onAmbientTemperatureChange(Number(e.target.value))}
+            min="10"
+            max="80"
+            step="5"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">Standardowo: 30°C (bazowa)</p>
+        </div>
+
+        {/* Liczba obwodów w wiązce */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Liczba obwodów w wiązce
+          </label>
+          <input
+            type="number"
+            value={numberOfCircuitsInBundle}
+            onChange={(e) => onNumberOfCircuitsInBundleChange(Number(e.target.value))}
+            min="1"
+            max="20"
+            step="1"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">1 = pojedynczy przewód</p>
+        </div>
+        {/* Sposób ułożenia */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Sposób ułożenia przewodu
+          </label>
+          <select
+            value={installationMethod}
+            onChange={(e) => onInstallationMethodChange(e.target.value as InstallationMethod)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {Object.entries(INSTALLATION_METHOD_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Wybór przekroju */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -88,14 +205,47 @@ export const CalculationSection = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value={0}>Wybierz...</option>
-            {CABLE_CAPACITY_A1.map(cable => (
-              <option key={cable.crossSection} value={cable.crossSection}>
-                {cable.crossSection} mm² (Iz = {cable.copperIz}A)
-              </option>
-            ))}
+            {CABLE_CAPACITY_A1.map(cable => {
+              const cableIz = getCableCapacityByInstallation(cable.crossSection, installationMethod, material) || 0
+              return (
+                <option key={cable.crossSection} value={cable.crossSection}>
+                  {cable.crossSection} mm² (Iz = {cableIz > 0 ? `${cableIz}A` : '...'})
+                </option>
+              )
+            })}
           </select>
         </div>
       </div>
+
+      {/* Info o automatycznym Iz */}
+      {autoIz > 0 && crossSection > 0 && (
+        <div className="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+          <p className="text-sm text-blue-800 mb-2">
+            <strong>💡 Automatyczny dobór Iz:</strong>
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-gray-700">Idd (bazowe):</span>
+              <span className="font-semibold ml-2">{autoIz} A</span>
+              <p className="text-xs text-gray-600 mt-1">
+                Przekrój {crossSection} mm² ({material === 'copper' ? 'Cu' : 'Al'}), sposób ułożenia {installationMethod}
+              </p>
+            </div>
+            <div className="bg-white p-3 rounded border border-blue-200">
+              <span className="text-gray-700">Iz (skorygowane):</span>
+              <span className="font-bold text-blue-600 ml-2 text-lg">{dynamicIz} A</span>
+              <p className="text-xs text-gray-600 mt-1">
+                T = {ambientTemperature}°C, Obwodów = {numberOfCircuitsInBundle}, Izolacja = {insulationType}
+              </p>
+              {dynamicIz !== autoIz && (
+                <p className="text-xs text-blue-700 mt-1">
+                  Współczynnik redukcji: {((dynamicIz / autoIz) * 100).toFixed(1)}%
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Warunek złotej zasady */}
       <div className={`p-4 rounded-lg border-2 ${
@@ -106,7 +256,7 @@ export const CalculationSection = ({
             : 'bg-red-50 border-red-500'
       }`}>
         <h3 className="font-semibold mb-3 flex items-center gap-2">
-          {IB === 0 ? '⏳' : isValid ? '✅' : '❌'} Złota zasada: IB ≤ In ≤ Iz
+          {IB === 0 ? '⏳' : isValid ? '✅' : '❌'} Weryfikacja: I<sub>B</sub> ≤ I<sub>n</sub> ≤ I<sub>z</sub>
         </h3>
 
         <div className="grid grid-cols-3 gap-4 mb-4 text-center">
@@ -187,6 +337,51 @@ export const CalculationSection = ({
           isValid={isValid}
         />
       </div>
+
+      {/* Weryfikacja warunku przeciążeniowego (Zasada 1.45) */}
+      {IB > 0 && In > 0 && Iz > 0 && (
+        <div className={`mt-4 p-4 rounded-lg border-2 ${
+          overloadCheck.isValid ? 'bg-green-50 border-green-500' : 'bg-yellow-50 border-yellow-500'
+        }`}>
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            {overloadCheck.isValid ? '✅' : '⚠️'} Weryfikacja przeciążeniowa (Zasada 1.45)
+          </h3>
+
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-gray-600">Warunek 1: IB ≤ In</div>
+                <div className={`font-semibold ${overloadCheck.condition1 ? 'text-green-600' : 'text-red-600'}`}>
+                  {overloadCheck.condition1 ? '✅' : '❌'} {IB.toFixed(1)}A ≤ {In}A
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-600">Warunek 2: I₂ ≤ 1.45 × Iz</div>
+                <div className={`font-semibold ${overloadCheck.condition2 ? 'text-green-600' : 'text-red-600'}`}>
+                  {overloadCheck.condition2 ? '✅' : '❌'} {overloadCheck.I2.toFixed(1)}A ≤ {(1.45 * Iz).toFixed(1)}A
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 p-3 bg-blue-50 rounded">
+              <p className="text-xs text-blue-800">
+                <strong>ℹ️ Wyjaśnienie:</strong> I₂ = 1.45 × In = {overloadCheck.I2.toFixed(1)}A to prąd próbny zadziałania zabezpieczenia w czasie umownym.
+                Warunek I₂ ≤ 1.45 × Iz zapewnia, że zabezpieczenie chroni przewód przed skutkami przeciążeń.
+              </p>
+            </div>
+
+            {!overloadCheck.isValid && (
+              <div className="mt-3 p-3 bg-yellow-100 rounded border border-yellow-300">
+                <p className="text-sm text-yellow-800">
+                  <strong>⚠️ Uwaga:</strong> Zabezpieczenie może nie chronić przewodu przed skutkami przeciążeń o małej wartości!
+                  <br/>
+                  <strong>Sugestie:</strong> Zwiększ przekrój przewodu lub zmniejsz prąd znamionowy zabezpieczenia.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

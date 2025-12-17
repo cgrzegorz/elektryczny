@@ -1,6 +1,8 @@
+import React from 'react'
+
 // Komponent Table do wyświetlania danych tabelarycznych
 interface Column<T> {
-  header: string
+  header: string | React.ReactNode
   accessor: keyof T | ((row: T) => React.ReactNode)
   className?: string
 }
@@ -25,7 +27,7 @@ export const Table = <T,>({ data, columns, caption }: TableProps<T>) => {
             {columns.map((column, index) => (
               <th
                 key={index}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                className="px-3 py-3 text-left text-xs font-semibold text-gray-700"
               >
                 {column.header}
               </th>
@@ -38,7 +40,7 @@ export const Table = <T,>({ data, columns, caption }: TableProps<T>) => {
               {columns.map((column, colIndex) => (
                 <td
                   key={colIndex}
-                  className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${column.className || ''}`}
+                  className={`px-3 py-3 whitespace-nowrap text-sm text-gray-900 ${column.className || ''}`}
                 >
                   {typeof column.accessor === 'function'
                     ? column.accessor(row)
