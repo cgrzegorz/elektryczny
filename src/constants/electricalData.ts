@@ -47,12 +47,16 @@ export const VOLTAGE_DROP_LIMITS = {
   /** Obwody gniazd wtykowych - max 5% */
   sockets: 0.05,
 
+  /** Obwody silnikowe - max 5% */
+  motor: 0.05,
+
+  /** WLZ (Wejście Linii Zasilającej) - max 1% (dobra praktyka dla głównego zasilania) */
+  wlz: 0.01,
+
   /** Inne obwody - max 5% */
   other: 0.05,
-
-  /** Obwody silnikowe - max 5% */
-  motors: 0.05,
 } as const
+
 
 /**
  * Typy obiektów dla TypeScript

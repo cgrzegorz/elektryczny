@@ -10,7 +10,29 @@
  * @returns true jeśli warunek spełniony
  */
 export const checkGoldenRule = (IB: number, In: number, Iz: number): boolean => {
+  // Warunek nie może być sprawdzony jeśli IB = 0
+  if (IB === 0) return false
   return IB <= In && In <= Iz
+}
+
+/**
+ * Sprawdza warunek przeciążeniowy (drugi stopień zabezpieczenia)
+ * Warunek: I₂ ≤ 1.45 × Iz
+ * Dla wyłączników nadprądowych: I₂ = 1.45 × In
+ * Po uproszczeniu: In ≤ Iz (to samo co część złotej zasady)
+ *
+ * @param In - prąd znamionowy zabezpieczenia [A]
+ * @param Iz - obciążalność długotrwała przewodu [A]
+ * @returns true jeśli warunek spełniony
+ */
+export const checkOverloadProtection = (In: number, Iz: number): boolean => {
+  // I₂ = 1.45 × In (prąd zadziałania w czasie umownym)
+  const I2 = 1.45 * In
+  // Warunek: I₂ ≤ 1.45 × Iz
+  const maxAllowed = 1.45 * Iz
+  return I2 <= maxAllowed
+  // Po uproszczeniu: 1.45 × In ≤ 1.45 × Iz → In ≤ Iz
+  // Czyli jest to zawarte w złotej zasadzie
 }
 
 /**
@@ -75,4 +97,3 @@ export const calculateVoltageDropPercent = (voltageDrop: number, nominalVoltage:
 export const calculateMinCrossSection = (Ik: number, t: number, k: number): number => {
   return (Ik * Math.sqrt(t)) / k
 }
-

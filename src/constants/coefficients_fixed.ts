@@ -7,7 +7,6 @@
  * Do uzupełnienia wartościami z notatek
  */
 export const CORRECTION_FACTORS = {
-  // Współczynnik korekcyjny dla temperatury otoczenia
   temperatureCorrection: {
     '30C': 1.0,
     '35C': 0.94,
@@ -16,7 +15,6 @@ export const CORRECTION_FACTORS = {
     '50C': 0.71,
   },
 
-  // Współczynnik korekcyjny dla sposobu układania przewodów
   installationMethod: {
     A1: 1.0,
     A2: 0.95,
@@ -27,7 +25,6 @@ export const CORRECTION_FACTORS = {
     E: 0.85,
   },
 
-  // Współczynnik korekcyjny dla liczby obwodów
   groupingFactor: {
     1: 1.0,
     2: 0.8,
@@ -54,9 +51,7 @@ export const NOMINAL_VOLTAGES = {
   threePhase: 400, // V
 } as const
 
-/**
- * Współczynniki mocy typowych odbiorników
- */
+
 export const POWER_FACTORS = {
   lighting: 1.0,
   heating: 1.0,

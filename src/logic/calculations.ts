@@ -61,26 +61,59 @@ export const calculateVoltageDrop = (current: number, resistance: number): numbe
  * @param length - długość przewodu [m]
  * @param crossSection - przekrój przewodu [mm²]
  * @param voltage - napięcie zasilania [V] (domyślnie 230V)
- * @param resistivity - rezystywność materiału [Ω·mm²/m] (miedź: 0.0175, aluminium: 0.0278)
+ * @param resistivity - rezystywność materiału [Ω·mm²/m] (miedź: 0.0175)
  * @returns spadek napięcia [%]
  */
-export const calculateVoltageDropPercent = (
+export const calculateVoltageDropPercentSinglePhase = (
   IB: number,
   length: number,
   crossSection: number,
   voltage: number = 230,
-  resistivity: number = 0.0175 // miedź
+  resistivity: number = 0.0175
 ): number => {
   if (crossSection === 0 || voltage === 0 || IB === 0 || length === 0) return 0
   if (IB < 0 || length < 0 || crossSection < 0) return 0
 
-  // Dla jednofazowego: ΔU% = (2 × IB × ρ × L) / (S × U) × 100%
-  // Mnożymy przez 2, bo prąd płynie tam i z powrotem
+  // Dla 1-fazy: ΔU% = (2 × IB × ρ × L) / (S × U) × 100%
+  // Mnożymy przez 2, bo prąd płynie tam i z powrotem (faza + neutral)
   const voltageDrop = (2 * IB * resistivity * length) / (crossSection * voltage) * 100
 
-  // Zaokrąglij do 2 miejsc po przecinku
   return Math.round(voltageDrop * 100) / 100
 }
+
+/**
+ * Oblicza spadek napięcia procentowy dla instalacji trójfazowej
+ * @param IB - prąd obliczeniowy [A]
+ * @param length - długość przewodu [m]
+ * @param crossSection - przekrój przewodu [mm²]
+ * @param voltage - napięcie międzyfazowe [V] (domyślnie 400V)
+ * @param resistivity - rezystywność materiału [Ω·mm²/m] (miedź: 0.0175)
+ * @returns spadek napięcia [%]
+ */
+export const calculateVoltageDropPercentThreePhase = (
+  IB: number,
+  length: number,
+  crossSection: number,
+  voltage: number = 400,
+  resistivity: number = 0.0175
+): number => {
+  if (crossSection === 0 || voltage === 0 || IB === 0 || length === 0) return 0
+  if (IB < 0 || length < 0 || crossSection < 0) return 0
+
+  // Dla 3-faz: ΔU% = (√3 × IB × ρ × L) / (S × U) × 100%
+  // √3 ≈ 1.732 (NIE mnożymy przez 2!)
+  // W układzie 3-fazowym symetrycznym prądy w neutralu się znoszą
+  const sqrt3 = Math.sqrt(3)
+  const voltageDrop = (sqrt3 * IB * resistivity * length) / (crossSection * voltage) * 100
+
+  return Math.round(voltageDrop * 100) / 100
+}
+
+/**
+ * PRZESTARZAŁA - użyj calculateVoltageDropPercentSinglePhase lub calculateVoltageDropPercentThreePhase
+ * @deprecated
+ */
+export const calculateVoltageDropPercent = calculateVoltageDropPercentSinglePhase
 
 /**
  * Oblicza moc czynną

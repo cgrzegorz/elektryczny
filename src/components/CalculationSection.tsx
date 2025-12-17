@@ -98,25 +98,45 @@ export const CalculationSection = ({
       </div>
 
       {/* Warunek złotej zasady */}
-      <div className={`p-4 rounded-lg border-2 ${isValid ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
+      <div className={`p-4 rounded-lg border-2 ${
+        IB === 0 
+          ? 'bg-gray-50 border-gray-300' 
+          : isValid 
+            ? 'bg-green-50 border-green-500' 
+            : 'bg-red-50 border-red-500'
+      }`}>
         <h3 className="font-semibold mb-3 flex items-center gap-2">
-          {isValid ? '✅' : '❌'} Złota zasada: IB ≤ In ≤ Iz
+          {IB === 0 ? '⏳' : isValid ? '✅' : '❌'} Złota zasada: IB ≤ In ≤ Iz
         </h3>
 
         <div className="grid grid-cols-3 gap-4 mb-4 text-center">
           <div>
             <div className="text-sm text-gray-600">IB (Obciążenie)</div>
-            <div className="text-2xl font-bold text-blue-600">{IB.toFixed(1)} A</div>
+            <div className={`text-2xl font-bold ${IB === 0 ? 'text-gray-400' : 'text-blue-600'}`}>
+              {IB.toFixed(1)} A
+            </div>
           </div>
           <div>
             <div className="text-sm text-gray-600">In (Zabezpieczenie)</div>
-            <div className="text-2xl font-bold text-orange-600">{In} A</div>
+            <div className={`text-2xl font-bold ${IB === 0 ? 'text-gray-400' : 'text-orange-600'}`}>
+              {In} A
+            </div>
           </div>
           <div>
             <div className="text-sm text-gray-600">Iz (Przewód)</div>
-            <div className="text-2xl font-bold text-green-600">{Iz} A</div>
+            <div className={`text-2xl font-bold ${IB === 0 ? 'text-gray-400' : 'text-green-600'}`}>
+              {Iz} A
+            </div>
           </div>
         </div>
+
+        {IB === 0 && (
+          <div className="mt-4 p-3 bg-gray-100 rounded">
+            <p className="text-sm text-gray-600">
+              ℹ️ Wprowadź prąd obciążenia (IB) lub moc odbiornika w Sekcji 1, aby sprawdzić warunek.
+            </p>
+          </div>
+        )}
 
         {/* Pasek postępu */}
         <div className="space-y-2">

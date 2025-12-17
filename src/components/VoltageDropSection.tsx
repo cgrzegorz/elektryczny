@@ -17,8 +17,9 @@ export const VoltageDropSection = ({
   onLengthChange
 }: VoltageDropSectionProps) => {
   const lengthValue = parseFloat(length) || 0
-  const limit = VOLTAGE_DROP_LIMITS[type] * 100 // konwersja do %
-  const hasData = lengthValue > 0 && voltageDrop > 0
+  const limitRaw = VOLTAGE_DROP_LIMITS[type as keyof typeof VOLTAGE_DROP_LIMITS]
+  const limit = (limitRaw || 0.05) * 100 // konwersja do %, domyślnie 5% jeśli brak limitu
+  const hasData = lengthValue > 0 && voltageDrop > 0 && !isNaN(voltageDrop)
   const isValid = hasData && voltageDrop <= limit
 
   // Sprawdź co brakuje
@@ -89,16 +90,17 @@ export const VoltageDropSection = ({
 
             {!isValid && (
               <div className="mt-3 p-3 bg-red-100 rounded">
-                <p className="text-sm text-red-800">
-                  <strong>⚠️ Uwaga:</strong> Spadek napięcia przekracza dopuszczalną wartość!
-                  <br/>
-                  <strong>Rozwiązania:</strong>
+                <div className="text-sm text-red-800">
+                  <p className="mb-2">
+                    <strong>⚠️ Uwaga:</strong> Spadek napięcia przekracza dopuszczalną wartość!
+                  </p>
+                  <p className="font-semibold mb-1">Rozwiązania:</p>
                   <ul className="list-disc ml-5 mt-1">
                     <li>Zwiększ przekrój przewodu</li>
                     <li>Skróć trasę przewodu (jeśli możliwe)</li>
                     <li>Zmniejsz obciążenie obwodu</li>
                   </ul>
-                </p>
+                </div>
               </div>
             )}
 

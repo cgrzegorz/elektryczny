@@ -59,9 +59,9 @@ export const CIRCUIT_SUGGESTIONS: Record<CircuitType, CircuitSuggestion> = {
   },
   wlz: {
     crossSection: 10,
-    In: 63,
+    In: 32,
     characteristic: 'C',
-    reason: 'Wejście Linii Zasilającej (3-fazowe, główny kabel budynku)'
+    reason: 'Wejście Linii Zasilającej (3-fazowe, dla przyłącza ~17-20kW)'
   },
   other: {
     crossSection: 2.5,

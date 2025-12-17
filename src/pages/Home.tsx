@@ -6,7 +6,7 @@ import { SafetySection } from '../components/SafetySection'
 import { ReportSection } from '../components/ReportSection'
 import { findCableCapacity, CABLE_CAPACITY_A1 } from '../constants/cableTables'
 import { checkGoldenRule, checkShortCircuitProtection, calculateTripCurrent } from '../logic/circuitValidation'
-import { calculateVoltageDropPercent, calculateCurrentSinglePhase, calculateCurrentThreePhase } from '../logic/calculations'
+import { calculateVoltageDropPercentSinglePhase, calculateVoltageDropPercentThreePhase, calculateCurrentSinglePhase, calculateCurrentThreePhase } from '../logic/calculations'
 import { TRIP_MULTIPLIERS } from '../constants/electricalData'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import type { Circuit, CircuitType, ProtectionCharacteristic, PhaseType, InputMode } from '../types/circuit'
@@ -31,6 +31,7 @@ export const Home = () => {
 
   // Bezpieczeństwo (Sekcja 3)
   const [Zs, setZs] = useState('')
+  const [ZsSource, setZsSource] = useState('') // Impedancja źródła (złącze)
 
   // Lista obwodów (Sekcja 4) - zapisywana w localStorage
   const [circuits, setCircuits] = useLocalStorage<Circuit[]>('elektryczny-circuits', [])
@@ -52,9 +53,11 @@ export const Home = () => {
   const Ia = calculateTripCurrent(In, multiplier)
   const swzValid = ZsValue > 0 ? checkShortCircuitProtection(ZsValue, 230, Ia) : undefined
 
-  // Obliczanie spadku napięcia
-  const voltageDrop = lengthValue > 0 && crossSection > 0
-    ? calculateVoltageDropPercent(IBValue, lengthValue, crossSection)
+  // Obliczanie spadku napięcia - POPRAWIONE dla 1-fazy i 3-faz
+  const voltageDrop = lengthValue > 0 && crossSection > 0 && IBValue > 0
+    ? phaseType === 'single'
+      ? calculateVoltageDropPercentSinglePhase(IBValue, lengthValue, crossSection, 230)
+      : calculateVoltageDropPercentThreePhase(IBValue, lengthValue, crossSection, 400)
     : 0
 
   const handleAddCircuit = () => {
@@ -162,7 +165,11 @@ export const Home = () => {
           In={In}
           characteristic={characteristic}
           Zs={Zs}
+          ZsSource={ZsSource}
+          length={lengthValue}
+          crossSection={crossSection}
           onZsChange={setZs}
+          onZsSourceChange={setZsSource}
         />
 
         {/* Przycisk dodania do listy */}
