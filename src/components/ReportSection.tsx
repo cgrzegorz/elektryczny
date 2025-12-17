@@ -7,11 +7,15 @@ import {VOLTAGE_DROP_LIMITS} from "../constants/electricalData.ts";
 interface ReportSectionProps {
   circuits: Circuit[]
   onRemoveCircuit: (id: string) => void
+  onClearAll: () => void
+  onImportCircuits: (circuits: Circuit[]) => void
 }
 
 export const ReportSection = ({
   circuits,
-  onRemoveCircuit
+  onRemoveCircuit,
+  onClearAll,
+  onImportCircuits
 }: ReportSectionProps) => {
   const columns = [
     {
