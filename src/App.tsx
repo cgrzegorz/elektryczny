@@ -5,9 +5,13 @@ import { About } from './pages/About'
 import { ElectricalData } from './pages/ElectricalData'
 import './App.css'
 
+const baseUrl = import.meta.env.BASE_URL
+const basename = baseUrl === '/' ? undefined : baseUrl.replace(/\/$/, '')
+
+
 export const App = () => {
   return (
-    <Router>
+    <Router basename={basename}>
       <Navigation />
       <Routes>
         <Route path="/" element={<Home />} />

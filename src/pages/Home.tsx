@@ -8,6 +8,7 @@ import { findCableCapacity, CABLE_CAPACITY_A1 } from '../constants/cableTables'
 import { checkGoldenRule, checkShortCircuitProtection, calculateTripCurrent } from '../logic/circuitValidation'
 import { calculateVoltageDropPercent } from '../logic/calculations'
 import { TRIP_MULTIPLIERS } from '../constants/electricalData'
+import { useLocalStorage } from '../hooks/useLocalStorage'
 import type { Circuit, CircuitType, ProtectionCharacteristic } from '../types/circuit'
 
 export const Home = () => {
