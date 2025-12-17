@@ -2,7 +2,7 @@
  * Typy danych dla obwodów elektrycznych
  */
 
-export type CircuitType = 'lighting' | 'sockets' | 'other' | 'motor'
+export type CircuitType = 'lighting' | 'sockets' | 'other' | 'motor' | 'wlz'
 export type ProtectionCharacteristic = 'B' | 'C' | 'D'
 export type CableMaterial = 'copper' | 'aluminum'
 export type PhaseType = 'single' | 'three' // 1-fazowy lub 3-fazowy
