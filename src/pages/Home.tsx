@@ -1,21 +1,25 @@
 import { useState } from 'react'
-import { CircuitInputSection } from '../components/CircuitInputSection'
+import { PowerInputSection } from '../components/PowerInputSection'
 import { CalculationSection } from '../components/CalculationSection'
 import { VoltageDropSection } from '../components/VoltageDropSection'
 import { SafetySection } from '../components/SafetySection'
 import { ReportSection } from '../components/ReportSection'
 import { findCableCapacity, CABLE_CAPACITY_A1 } from '../constants/cableTables'
 import { checkGoldenRule, checkShortCircuitProtection, calculateTripCurrent } from '../logic/circuitValidation'
-import { calculateVoltageDropPercent } from '../logic/calculations'
+import { calculateVoltageDropPercent, calculateCurrentSinglePhase, calculateCurrentThreePhase } from '../logic/calculations'
 import { TRIP_MULTIPLIERS } from '../constants/electricalData'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import type { Circuit, CircuitType, ProtectionCharacteristic } from '../types/circuit'
+import type { Circuit, CircuitType, ProtectionCharacteristic, PhaseType, InputMode } from '../types/circuit'
 
 export const Home = () => {
   // Dane obwodu (Sekcja 1)
   const [name, setName] = useState('')
   const [type, setType] = useState<CircuitType>('sockets')
-  const [IB, setIB] = useState('')
+  const [inputMode, setInputMode] = useState<InputMode>('current')
+  const [phaseType, setPhaseType] = useState<PhaseType>('single')
+  const [powerKW, setPowerKW] = useState('')
+  const [currentA, setCurrentA] = useState('')
+  const [powerFactor, setPowerFactor] = useState('')
 
   // Obliczenia (Sekcja 2)
   const [In, setIn] = useState(16)
@@ -31,8 +35,14 @@ export const Home = () => {
   // Lista obwodów (Sekcja 4) - zapisywana w localStorage
   const [circuits, setCircuits] = useLocalStorage<Circuit[]>('elektryczny-circuits', [])
 
-  // Obliczenia pomocnicze
-  const IBValue = parseFloat(IB) || 0
+  // Obliczenia pomocnicze - IB zależy od trybu wprowadzania
+  const IBValue = inputMode === 'current'
+    ? parseFloat(currentA) || 0
+    : inputMode === 'power' && powerKW
+      ? phaseType === 'single'
+        ? calculateCurrentSinglePhase(parseFloat(powerKW), 230, parseFloat(powerFactor) || 1.0)
+        : calculateCurrentThreePhase(parseFloat(powerKW), 400, parseFloat(powerFactor) || 0.93)
+      : 0
   const Iz = findCableCapacity(crossSection, CABLE_CAPACITY_A1, 'copper') || 0
   const lengthValue = parseFloat(length) || 0
   const ZsValue = parseFloat(Zs) || 0
@@ -49,7 +59,7 @@ export const Home = () => {
 
   const handleAddCircuit = () => {
     if (!name || IBValue === 0 || In === 0 || crossSection === 0) {
-      alert('Wypełnij wszystkie wymagane pola (nazwa, IB, In, przekrój)')
+      alert('Wypełnij wszystkie wymagane pola (nazwa, IB/Moc, In, przekrój)')
       return
     }
 
@@ -63,6 +73,9 @@ export const Home = () => {
       crossSection,
       material: 'copper',
       Iz,
+      phaseType,
+      powerKW: inputMode === 'power' ? parseFloat(powerKW) : undefined,
+      powerFactor: inputMode === 'power' ? parseFloat(powerFactor) || (phaseType === 'single' ? 1.0 : 0.93) : undefined,
       length: lengthValue > 0 ? lengthValue : undefined,
       voltageDrop: voltageDrop > 0 ? voltageDrop : undefined,
       Zs: ZsValue > 0 ? ZsValue : undefined,
@@ -74,7 +87,9 @@ export const Home = () => {
 
     // Reset formularza
     setName('')
-    setIB('')
+    setCurrentA('')
+    setPowerKW('')
+    setPowerFactor('')
     setLength('')
     setZs('')
   }
@@ -104,14 +119,22 @@ export const Home = () => {
       </div>
 
       <div className="container mx-auto px-4 space-y-6">
-        {/* Sekcja 1: Dane obwodu */}
-        <CircuitInputSection
+        {/* Sekcja 1: Dane obwodu - NOWA z przełącznikiem kW/A */}
+        <PowerInputSection
           name={name}
           type={type}
-          IB={IB}
+          inputMode={inputMode}
+          phaseType={phaseType}
+          powerKW={powerKW}
+          currentA={currentA}
+          powerFactor={powerFactor}
           onNameChange={setName}
           onTypeChange={setType}
-          onIBChange={setIB}
+          onInputModeChange={setInputMode}
+          onPhaseTypeChange={setPhaseType}
+          onPowerKWChange={setPowerKW}
+          onCurrentAChange={setCurrentA}
+          onPowerFactorChange={setPowerFactor}
         />
 
         {/* Sekcja 2: Obliczenia */}

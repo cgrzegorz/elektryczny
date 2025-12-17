@@ -1,4 +1,5 @@
 import { Badge } from './Badge'
+import { GoldenRuleVisualization } from './GoldenRuleVisualization'
 import { NOMINAL_CURRENTS } from '../constants/electricalData'
 import { CABLE_CAPACITY_A1 } from '../constants/cableTables'
 import { CHARACTERISTIC_LABELS, type ProtectionCharacteristic } from '../types/circuit'
@@ -157,6 +158,14 @@ export const CalculationSection = ({
             <Badge variant="info">Zapas: {((Iz - In) / Iz * 100).toFixed(1)}%</Badge>
           </div>
         )}
+
+        {/* Wizualizacja na osi liczbowej */}
+        <GoldenRuleVisualization
+          IB={IB}
+          In={In}
+          Iz={Iz}
+          isValid={isValid}
+        />
       </div>
     </div>
   )

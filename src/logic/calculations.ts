@@ -4,6 +4,43 @@
  */
 
 /**
+ * Oblicza prąd z mocy dla instalacji jednofazowej (230V)
+ * Wzór: IB = P / U
+ * @param powerKW - moc w kilowatach [kW]
+ * @param voltage - napięcie [V] (domyślnie 230V)
+ * @param powerFactor - współczynnik mocy cosφ (domyślnie 1.0)
+ * @returns prąd obliczeniowy IB [A]
+ */
+export const calculateCurrentSinglePhase = (
+  powerKW: number,
+  voltage: number = 230,
+  powerFactor: number = 1.0
+): number => {
+  if (powerKW <= 0 || voltage <= 0 || powerFactor <= 0) return 0
+  const powerW = powerKW * 1000
+  return powerW / (voltage * powerFactor)
+}
+
+/**
+ * Oblicza prąd z mocy dla instalacji trójfazowej (400V)
+ * Wzór: IB = P / (√3 × U × cosφ)
+ * @param powerKW - moc w kilowatach [kW]
+ * @param voltage - napięcie międzyfazowe [V] (domyślnie 400V)
+ * @param powerFactor - współczynnik mocy cosφ (domyślnie 0.93)
+ * @returns prąd obliczeniowy IB [A]
+ */
+export const calculateCurrentThreePhase = (
+  powerKW: number,
+  voltage: number = 400,
+  powerFactor: number = 0.93
+): number => {
+  if (powerKW <= 0 || voltage <= 0 || powerFactor <= 0) return 0
+  const powerW = powerKW * 1000
+  const sqrt3 = Math.sqrt(3) // ≈ 1.732
+  return powerW / (sqrt3 * voltage * powerFactor)
+}
+
+/**
  * Przykładowe funkcje obliczeń elektrycznych
  * (Do uzupełnienia konkretnymi wzorami z notatek)
  */
